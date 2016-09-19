@@ -4,21 +4,35 @@ and.gate <- data.frame(x1 = c(0, 0, 1, 1), x2 = c(0, 1, 0, 1), y = c(0, 0, 0, 1)
 or.gate <- data.frame(x1 = c(0, 0, 1, 1), x2 = c(0, 1, 0, 1), y = c(0, 1, 1, 1))
 xor.gate <- data.frame(x1 = c(0, 0, 1, 1), x2 = c(0, 1, 0, 1), y = c(0, 1, 1, 0))
 
-X <- as.matrix(and.gate[, 1:2])
-y <- as.matrix(and.gate$y)
-
 sigmoid.func <- function(x){
     return(1 / (1 + exp(-x)))
 }
 
-fwd.prop <- function(X, W, U){
-    n.1 <- sigmoid.func(W %*% t(X))
-    n.2 <- sigmoid.func(U %*% n.1)
-    return(n.2)
+fwd.prop <- function(x, weights){
+    n.1 <- sigmoid.func(x %*% weights[[1]])
+    n.2 <- sigmoid.func(n.1 %*% weights[[2]])
+    return(list(n.1, n.2))
 }
 
-train.error <- function(y, n.2){
-    err <- sum((y - t(n.2)) ** 2) / length(y)
+grad.back.prop <- function(output, input, layers, weights){
+    delta.2 <- (layers[[2]] - output) * layers[[2]] * (1- layers[[2]])
+    grad.2 <- matrix(outer(delta.2, layers[[1]])[,,1,], ncol = length(delta.2), byrow = TRUE)
+        
+    delta.1 <- t(weights[[2]] %*% delta.2) * layers[[1]] * (1 - layers[[1]])
+    grad.1 <- matrix(outer(delta.1, input)[,,1,], ncol = length(delta.1), byrow = TRUE)
+
+    return(list(grad.1, grad.2))
+}
+
+update.weights <- function(weights, grads, step.size){
+    weights[[1]] <- weights[[1]] - step.size * grads[[1]]
+    weights[[2]] <- weights[[2]] - step.size * grads[[2]]
+    return(weights)
+}
+
+train.error <- function(y, X, weights){
+    layers <- fwd.prop(X, weights)
+    err <- sum((y - layers[[2]]) ** 2) / length(y)
     return(err)
 }
 
@@ -30,48 +44,39 @@ step.size <- 0.05
 ## Output layer has single neuron, thus has 3 weight parameters
 
 
-main <- function(step.size, iteration){
-    
+main <- function(data, step.size, iterations, reports){
+
+    X <- as.matrix(data[, 1:2])
+    y <- as.matrix(data$y)
+
     ## Initialise weights
-    ## W is matrix of weights for first layer, 3x2
-    W <- matrix(rnorm(n = 6, sd = 0.01), ncol = 2)
+    W <- matrix(rnorm(n = 6, sd = 0.01), ncol = 3)
+    U <- matrix(rnorm(n = 3, sd = 0.01), ncol = 1)
+    weights <- list(W, U)
 
-    ## U is matrix of weights for second layer, 1x3
-    U <- matrix(rnorm(n = 3, sd = 0.01), ncol = 3)
+    print(sprintf("Initial training error: %s",train.error(y, X, weights)))
+    
+    for(s in 1:iterations){
+        i <- (s %% 4) + 1
+                
+        ## Input matrix 1x2, 2 inputs)
+        input <- X[i, , drop = FALSE] # REMEMBER TO CHANGE BACK
+        output <- y[i, , drop = FALSE]
 
-    for(s in 1:1000){
-        j <- (s %% 6) + 1
-        if(j >= 4){
-            i <- 4
-        } else {
-            i <- j
+        layers <- fwd.prop(input, weights)
+        
+        grads <- grad.back.prop(output, input, layers, weights)
+        
+        weights <- update.weights(weights, grads, step.size)
+
+        if(s %% (iterations %/% reports) == 0){
+            print(sprintf("Iteration: %s", s))
+            print(sprintf("Training error: %s",train.error(y, X, weights)))
         }
-        
-        ## Input matrix 2x1, 2 inputs)
-        input <- as.matrix(X[i, ])
-        output <- y[i, ]
-
-        ## N.1 first layer of neurons, 3x1
-        N.1 <- sigmoid.func(W %*% input)
-
-        ## N.2 output layer, single neuron 1x1
-        N.2 <- sigmoid.func(U %*% N.1)
-
-        ## Gradient for U weights, 3x1
-        delta.U <- as.vector((N.2 - output) * N.2 * (1 - N.2))
-        grad.U <- outer(delta.U, N.1)[,, 1]
-
-        ## Gradient for W weights
-        delta.W <- as.vector(sum(delta.U * U) * N.1 * (1 - N.1))
-        grad.W <- outer(delta.W, input)[,, 1]
-        
-        W <- W - step.size * grad.W
-        U <- U - step.size * grad.U
     }
 
-    print("Training error is: ")
-    print(train.error(y, fwd.prop(X, W, U)))
-    return(fwd.prop(X, W, U))
+    print(sprintf("Initial training error: %s",train.error(y, X, weights)))
+    return(weights)
 }
 
 ## Using neuralnet package to compare performance essentially to check implementation
