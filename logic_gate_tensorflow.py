@@ -15,8 +15,8 @@ X_mat_batch = np.split(X_mat, 4)
 Y_mat = np.array([[0.0], [0.0], [0.0], [1.0]]).astype("float32")
 Y_mat_batch = np.split(Y_mat, 4)
 
-x = tf.placeholder("float32", [1, 2])
-y = tf.placeholder("float32", [1, 1])
+x = tf.placeholder("float32", [None, 2])
+y = tf.placeholder("float32", [None, 1])
 
 
 def logic_gate(x, weights):
@@ -53,3 +53,6 @@ with tf.Session() as sess:
         if run % display_step == 0:
             print("Iteration: {}, cost: {}".format(run, avg_cost))
     print("Optimization finished!")
+
+    feed_dict = {x: X_mat, y: Y_mat}
+    print(sess.run(pred, feed_dict))
