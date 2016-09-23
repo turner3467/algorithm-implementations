@@ -76,6 +76,7 @@ main <- function(data, step.size, iterations, reports){
     }
 
     print(sprintf("Final training error: %s",train.error(y, X, weights)))
+
     return(list(weights, initial.weights))
 }
 
