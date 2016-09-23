@@ -52,8 +52,8 @@ main <- function(data, step.size, iterations, reports){
     ## Initialise weights
     W <- matrix(rnorm(n = 6, sd = 0.01), ncol = 3)
     U <- matrix(rnorm(n = 3, sd = 0.01), ncol = 1)
-    weights <- list(W, U)
-
+    initial.weights <- list(W, U)
+    weights <- initial.weights
     print(sprintf("Initial training error: %s",train.error(y, X, weights)))
     
     for(s in 1:iterations){
@@ -75,10 +75,41 @@ main <- function(data, step.size, iterations, reports){
         }
     }
 
-    print(sprintf("Initial training error: %s",train.error(y, X, weights)))
-    return(weights)
+    print(sprintf("Final training error: %s",train.error(y, X, weights)))
+    return(list(weights, initial.weights))
 }
 
+################## Accuracy below ################
+## xor gate, step-size = 0.5, 1 million iterations
+## accuracy 0.0001
+## output
+##           [,1]
+##[1,] 0.01323084
+##[2,] 0.98958391
+##[3,] 0.98958456
+##[4,] 0.01448111
+
+##################################################
+## and gate, step-size = 0.5, 1 million iterations
+## accuracy 0.063
+## output
+##             [,1]
+##[1,] 0.0000417549
+##[2,] 0.0026254057
+##[3,] 0.0028121358
+##[4,] 0.4999494329
+
+##################################################
+## or gate, step-size = 0.5, 1 million iterations
+## accuracy 0.000009
+## output
+##            [,1]
+##[1,] 0.004987676
+##[2,] 0.997537258
+##[3,] 0.997535449
+##[4,] 0.998335838
+
+##################################################
 ## Using neuralnet package to compare performance essentially to check implementation
 
 ## This produces correct results, but includes constant "bias" neurons which makes the
