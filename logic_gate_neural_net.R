@@ -90,14 +90,16 @@ main <- function(data, step.size, iterations, reports){
 ##[4,] 0.01448111
 
 ##################################################
-## and gate, step-size = 0.5, 1 million iterations
-## accuracy 0.063
+## and gate, step-size = 0.01, 1 million iterations
+## weight initialization std = 1
+## accuracy 0.0007
 ## output
-##             [,1]
-##[1,] 0.0000417549
-##[2,] 0.0026254057
-##[3,] 0.0028121358
-##[4,] 0.4999494329
+##           [,1]
+##[1,] 0.01154678
+##[2,] 0.03559105
+##[3,] 0.01830688
+##[4,] 0.96650621
+
 
 ##################################################
 ## or gate, step-size = 0.5, 1 million iterations
